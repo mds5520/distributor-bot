@@ -53,7 +53,7 @@ async def 판매(ctx, message_id: int, *, content: str):
             msg_data = distribution_data[message_id]
             msg_data['price'] = content
             embed = msg_data['embed']
-            embed.set_field_at(index=5, name="💸 판매금액", value=content, inline=False)
+            embed.set_field_at(index=3, name="💸 판매금액", value=content, inline=False)
             await msg_data['message'].edit(embed=embed)
             await ctx.send(f"💸 판매금액이 등록되었습니다: `{content}`", delete_after=10)
         else:
@@ -202,7 +202,7 @@ async def on_reaction_add(reaction, user):
             lines.append(line)
 
         embed.set_field_at(
-            index=3,
+            index=1,
             name="🎯 수령 대상자",
             value="\n".join(lines),
             inline=False
