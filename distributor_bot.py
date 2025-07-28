@@ -176,11 +176,13 @@ async def on_reaction_add(reaction, user):
                 await message.thread.edit(archived=True, locked=True)
                 print("[DEBUG] 스레드 아카이브 + 잠금 완료")
             await message.delete()
-            print("[DEBUG] 메시지 삭제 완료")
+            print("[DEBUG] 원본 메시지 삭제 완료 ✅")
         except discord.Forbidden:
-            print("[ERROR] 메시지 삭제 권한 없음 (discord.Forbidden)")
+            print("[ERROR] 메시지 삭제 권한 없음 ❌ (discord.Forbidden)")
         except discord.HTTPException as e:
-            print(f"[ERROR] 메시지 삭제 실패: {e}")
+            print(f"[ERROR] 메시지 삭제 실패 ❌: {e}")
+        except Exception as e:
+            print(f"[ERROR] 종료처리 알 수 없는 오류 ❌: {e}")
 
     if emoji in emoji_list:
         index = emoji_list.index(emoji)
