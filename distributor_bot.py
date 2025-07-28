@@ -167,16 +167,20 @@ async def on_reaction_add(reaction, user):
     완료채널 = guild.get_channel(완료_채널_ID)
 
     async def 종료처리(message, embed, 완료채널):
+        print(f"[DEBUG] 종료처리 실행됨 - message.id: {message.id}")
         try:
             if 완료채널:
                 await 완료채널.send(embed=embed)
+                print("[DEBUG] 완료 채널로 전송 완료")
             if message.thread:
                 await message.thread.edit(archived=True, locked=True)
+                print("[DEBUG] 스레드 아카이브 + 잠금 완료")
             await message.delete()
+            print("[DEBUG] 메시지 삭제 완료")
         except discord.Forbidden:
-            print("🚫 삭제 권한 없음 (Manage Messages 권한이 부족함)")
-        except Exception as e:
-            print(f"[종료처리 오류] {e}")
+            print("[ERROR] 메시지 삭제 권한 없음 (discord.Forbidden)")
+        except discord.HTTPException as e:
+            print(f"[ERROR] 메시지 삭제 실패: {e}")
 
     if emoji in emoji_list:
         index = emoji_list.index(emoji)
