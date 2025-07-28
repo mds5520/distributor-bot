@@ -171,8 +171,10 @@ async def on_reaction_add(reaction, user):
             if 완료채널:
                 await 완료채널.send(embed=embed)
             if message.thread:
-                await message.thread.edit(archived=True)
+                await message.thread.edit(archived=True, locked=True)
             await message.delete()
+        except discord.Forbidden:
+            print("🚫 삭제 권한 없음 (Manage Messages 권한이 부족함)")
         except Exception as e:
             print(f"[종료처리 오류] {e}")
 
