@@ -209,7 +209,7 @@ async def on_reaction_add(reaction, user):
                 await m.send(
                     f"👤 :{creator} 님의 분배 게시자에요."
                     f"💰 `{data['item']}` 아이템이 판매 완료되었어요!\n"
-                    f"🔗 [원본 메시지 바로가기]({msg_link})"
+                    f"🔗 [바로가기]({msg_link})"
                 )
             except discord.Forbidden:
                 await message.channel.send(f"⚠️ {m.display_name}님에게 DM을 보내지 못했습니다.", delete_after=10)
