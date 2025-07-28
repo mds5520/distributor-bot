@@ -4,10 +4,10 @@ import asyncio
 from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
-from dotenv import load_dotenv  # 🔑 추가
+from dotenv import load_dotenv
 from keepalive import keep_alive
 
-keep_alive()  # Render에서 슬립 방지를 위해 웹서버 실행
+keep_alive()
 
 load_dotenv()
 
@@ -71,7 +71,7 @@ async def 분배중(ctx):
     await send_distribution_list(ctx.author, ctx.guild, ctx.channel)
 
 @bot.tree.command(name="분배", description="아이템 분배 등록")
-@app_commands.describe(item="아이템 이름", 대상자="수령 대상자 메론")
+@app_commands.describe(item="아이템 이름", 대상자="수령 대상자 멘션")
 async def slash_분배(interaction: discord.Interaction, item: str, 대상자: str):
     await interaction.response.defer(ephemeral=True)
     mention_list = [m for m in interaction.channel.members if f"<@{m.id}>" in 대상자 or f"<@!{m.id}>" in 대상자]
@@ -92,16 +92,12 @@ async def create_distribution(channel, author, item, mention_list):
     msg = await channel.send("분배 메시지 준비 중...")
 
     embed = discord.Embed(title=f"🍆 아이템 분배 안내 (ID: {msg.id})", color=0x9146FF)
-    # embed.add_field(name="🔠 아이템명", value=item, inline=False)
-    # embed.add_field(name="📅 날짜 및 시간", value=f"{date_str} {time_str}", inline=False)
-    # embed.add_field(name="👤 생성자", value=author.mention, inline=False)
     summary_text = (
         f"🎁 아이템명 : {item}\n"
         f"📅 날짜 및 시간 : {date_str} {time_str}\n"
         f"👤 생성자 : {author.mention}"
     )
     embed.add_field(name="ℹ️ 기본 정보", value=summary_text, inline=False)
-
     embed.add_field(name="🎯 수령 대상자", value="\n".join(lines), inline=False)
     embed.add_field(name="📢 사용법", value=(
         "🔸 번호 이모지 누르면 수령 처리!\n"
@@ -118,7 +114,7 @@ async def create_distribution(channel, author, item, mention_list):
 
     for i in range(len(mention_list)):
         await msg.add_reaction(emoji_list[i])
-        await asyncio.sleep(0.3)  # 💡 이모지 추가 사이에 약간의 간격을 둠
+        await asyncio.sleep(0.3)
 
     await msg.add_reaction(check_emoji)
     await asyncio.sleep(0.3)
@@ -174,13 +170,12 @@ async def on_reaction_add(reaction, user):
     async def 종료처리(message, embed, 완료채널):
         try:
             print(f"[DEBUG] 종료처리 실행됨 - message.id: {message.id}")
-
             if 완료채널:
                 await 완료채널.send(embed=embed)
                 print("[DEBUG] 완료 채널로 전송 완료")
                 await asyncio.sleep(0.3)
 
-            if message.thread:
+            if hasattr(message, "thread") and message.thread:
                 await message.thread.delete()
                 print("[DEBUG] 스레드 삭제 완료 ✅")
                 await asyncio.sleep(0.3)
@@ -226,7 +221,7 @@ async def on_reaction_add(reaction, user):
             try:
                 msg_link = f"https://discord.com/channels/{guild.id}/{message.channel.id}/{message.id}"
                 await m.send(
-                    f"👤 :{creator} 님의 분배 게시자에요."
+                    f"👤 :{creator} 님의 분배 게시자에요.\n"
                     f"💰 `{data['item']}` 아이템이 판매 완료되었어요!\n"
                     f"🔗 [바로가기]({msg_link})"
                 )
