@@ -140,7 +140,7 @@ async def send_distribution_list(user, guild, channel):
             time_str = dt.strftime('%p %I:%M').replace('AM', '오전').replace('PM', '오후')
             author = data["creator"].display_name
             link = f"https://discord.com/channels/{guild.id}/{data['message'].channel.id}/{msg_id}"
-            found_items.append(f"{data['item']} | 🕛 {date_str} ⏰ {time_str} 👤 {author} → [바로가기]({link})")
+            found_items.append(f"{data['item']} | 🕛 {date_str} ⏰ {time_str} 👤 {author}\n → [바로가기]({link})")
 
     if found_items:
         try:
@@ -205,9 +205,11 @@ async def on_reaction_add(reaction, user):
         creator = data["creator"].display_name
         for m in data["mentions"]:
             try:
+                msg_link = f"https://discord.com/channels/{guild.id}/{message.channel.id}/{message.id}"
                 await m.send(
                     f"👤 :{creator} 님의 분배 게시자에요."
                     f"💰 `{data['item']}` 아이템이 판매 완료되었어요!\n"
+                    f"🔗 [원본 메시지 바로가기]({msg_link})"
                 )
             except discord.Forbidden:
                 await message.channel.send(f"⚠️ {m.display_name}님에게 DM을 보내지 못했습니다.", delete_after=10)
