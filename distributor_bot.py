@@ -1,5 +1,6 @@
 import discord
 import os
+import asyncio
 from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
@@ -117,8 +118,12 @@ async def create_distribution(channel, author, item, mention_list):
 
     for i in range(len(mention_list)):
         await msg.add_reaction(emoji_list[i])
+        await asyncio.sleep(0.3)  # 💡 이모지 추가 사이에 약간의 간격을 둠
+
     await msg.add_reaction(check_emoji)
+    await asyncio.sleep(0.3)
     await msg.add_reaction(sell_emoji)
+    await asyncio.sleep(0.3)
 
     distribution_data[msg.id] = {
         "creator": author,
@@ -167,18 +172,24 @@ async def on_reaction_add(reaction, user):
     완료채널 = guild.get_channel(완료_채널_ID)
 
     async def 종료처리(message, embed, 완료채널):
-        print(f"[DEBUG] 종료처리 실행됨 - message.id: {message.id}")
         try:
+            print(f"[DEBUG] 종료처리 실행됨 - message.id: {message.id}")
+
             if 완료채널:
                 await 완료채널.send(embed=embed)
                 print("[DEBUG] 완료 채널로 전송 완료")
+                await asyncio.sleep(0.3)
+
             if message.thread:
                 await message.thread.edit(archived=True, locked=True)
                 print("[DEBUG] 스레드 아카이브 + 잠금 완료")
+                await asyncio.sleep(0.3)
+
             await message.delete()
-            print("[DEBUG] 원본 메시지 삭제 완료 ✅")
+            print("[DEBUG] 메시지 삭제 완료 ✅")
+
         except discord.Forbidden:
-            print("[ERROR] 메시지 삭제 권한 없음 ❌ (discord.Forbidden)")
+            print("[ERROR] 메시지 삭제 권한 없음 ❌")
         except discord.HTTPException as e:
             print(f"[ERROR] 메시지 삭제 실패 ❌: {e}")
         except Exception as e:
