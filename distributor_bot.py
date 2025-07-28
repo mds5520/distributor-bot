@@ -4,6 +4,9 @@ from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
 from dotenv import load_dotenv  # 🔑 추가
+from keepalive import keep_alive
+
+keep_alive()  # Render에서 슬립 방지를 위해 웹서버 실행
 
 load_dotenv()
 
