@@ -166,7 +166,7 @@ async def on_reaction_add(reaction, user):
     guild = message.guild
     완료채널 = guild.get_channel(완료_채널_ID)
 
-    async def 종료처리():
+    async def 종료처리(message, embed, 완료채널):
         try:
             if 완료채널:
                 await 완료채널.send(embed=embed)
@@ -197,7 +197,7 @@ async def on_reaction_add(reaction, user):
 
         if len(data["received"]) == len(data["mentions"]):
             await message.channel.send("✅ 모든 대상자 수령 완료. 분배 종료!", delete_after=10)
-            await 종료처리()
+            await 종료처리(message, embed, 완료채널)
             del distribution_data[msg_id]
 
     elif emoji == sell_emoji:
@@ -216,7 +216,7 @@ async def on_reaction_add(reaction, user):
 
     elif emoji == check_emoji:
         await message.channel.send("✅ 강제 종료 처리가 완료되었습니다.", delete_after=10)
-        await 종료처리()
+        await 종료처리(message, embed, 완료채널)
         del distribution_data[msg_id]
 
 bot.run(TOKEN)
