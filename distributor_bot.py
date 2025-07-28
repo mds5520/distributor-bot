@@ -233,4 +233,39 @@ async def on_reaction_add(reaction, user):
         await 종료처리(message, embed, 완료채널)
         del distribution_data[msg_id]
 
+@bot.event
+async def on_reaction_remove(reaction, user):
+    if user.bot:
+        return
+
+    msg_id = reaction.message.id
+    if msg_id not in distribution_data:
+        return
+
+    data = distribution_data[msg_id]
+    emoji = str(reaction.emoji)
+    message = data["message"]
+    embed = data["embed"]
+
+    if emoji in emoji_list:
+        index = emoji_list.index(emoji)
+        if index in data["received"]:
+            data["received"].remove(index)
+
+        # ✅ 이모지 체크 다시 반영
+        lines = []
+        for i, m in enumerate(data["mentions"]):
+            line = f"{emoji_list[i]} {m.mention}"
+            if i in data["received"]:
+                line += " ✅"
+            lines.append(line)
+
+        embed.set_field_at(
+            index=1,  # ✅ "🎯 수령 대상자" 인덱스가 1인 경우
+            name="🎯 수령 대상자",
+            value="\n".join(lines),
+            inline=False
+        )
+        await message.edit(embed=embed)
+
 bot.run(TOKEN)
