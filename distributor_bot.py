@@ -37,16 +37,18 @@ async def on_ready():
 
 @bot.command()
 async def 분배(ctx, *, arg):
+    await asyncio.sleep(3)
     await ctx.message.delete()
     try:
         item, _ = map(str.strip, arg.split('/', 1))
         mention_list = ctx.message.mentions
         await create_distribution(ctx.channel, ctx.author, item, mention_list)
     except Exception as e:
-        await ctx.send(f"❌ 오류 발생: {e}", delete_after=10)
+        await ctx.send(f"❌ 오류 발생: {e}", delete_after=5)
 
 @bot.command()
 async def 판매(ctx, message_id: int, *, content: str):
+    await asyncio.sleep(3)
     await ctx.message.delete()
     try:
         if message_id in distribution_data:
@@ -55,18 +57,21 @@ async def 판매(ctx, message_id: int, *, content: str):
             embed = msg_data['embed']
             embed.set_field_at(index=3, name="💸 판매금액", value=content, inline=False)
             await msg_data['message'].edit(embed=embed)
-            await ctx.send(f"💸 판매금액이 등록되었습니다: `{content}`", delete_after=10)
+            await ctx.send(f"💸 판매금액이 등록되었습니다: `{content}`", delete_after=5)
         else:
-            await ctx.send("❌ 해당 메시지를 찾을 수 없습니다.", delete_after=10)
+            await ctx.send("❌ 해당 메시지를 찾을 수 없습니다.", delete_after=5)
     except Exception as e:
-        await ctx.send(f"❌ 오류: {e}", delete_after=10)
+        await ctx.send(f"❌ 오류: {e}", delete_after=5)
 
 @bot.command(name="ㅍ")
 async def 판매_축약(ctx, message_id: int, *, content: str):
+    await asyncio.sleep(3)
+    await ctx.message.delete()
     await 판매(ctx, message_id, content=content)
 
 @bot.command()
 async def 분배중(ctx):
+    await asyncio.sleep(3)
     await ctx.message.delete()
     await send_distribution_list(ctx.author, ctx.guild, ctx.channel)
 
@@ -147,9 +152,9 @@ async def send_distribution_list(user, guild, channel):
         try:
             await user.send("\n".join([f"📄 {user.display_name} 님의 분배 목록:"] + found_items))
         except discord.Forbidden:
-            await channel.send(f"⚠️ {user.mention}님에게 DM을 보내지 못했습니다.", delete_after=10)
+            await channel.send(f"⚠️ {user.mention}님에게 DM을 보내지 못했습니다.", delete_after=5)
     else:
-        await channel.send(f"🔍 {user.mention}님이 포함된 분배 항목이 없습니다.", delete_after=10)
+        await channel.send(f"🔍 {user.mention}님이 포함된 분배 항목이 없습니다.", delete_after=5)
 
 @bot.event
 async def on_reaction_add(reaction, user):
@@ -210,12 +215,12 @@ async def on_reaction_add(reaction, user):
         await message.edit(embed=embed)
 
         if len(data["received"]) == len(data["mentions"]):
-            await message.channel.send("✅ 모든 대상자 수령 완료. 분배 종료!", delete_after=10)
+            await message.channel.send("✅ 모든 대상자 수령 완료. 분배 종료!", delete_after=5)
             await 종료처리(message, embed, 완료채널)
             del distribution_data[msg_id]
 
     elif emoji == sell_emoji:
-        await message.channel.send("💰 판매 완료! DM을 전송해요.", delete_after=10)
+        await message.channel.send("💰 판매 완료! DM을 전송해요.", delete_after=5)
         creator = data["creator"].display_name
         for m in data["mentions"]:
             try:
@@ -226,10 +231,10 @@ async def on_reaction_add(reaction, user):
                     f"🔗 [바로가기]({msg_link})"
                 )
             except discord.Forbidden:
-                await message.channel.send(f"⚠️ {m.display_name}님에게 DM을 보내지 못했습니다.", delete_after=10)
+                await message.channel.send(f"⚠️ {m.display_name}님에게 DM을 보내지 못했습니다.", delete_after=5)
 
     elif emoji == check_emoji:
-        await message.channel.send("✅ 강제 종료 처리가 완료되었습니다.", delete_after=10)
+        await message.channel.send("✅ 강제 종료 처리가 완료되었습니다.", delete_after=5)
         await 종료처리(message, embed, 완료채널)
         del distribution_data[msg_id]
 
