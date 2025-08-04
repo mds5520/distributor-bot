@@ -7,22 +7,15 @@ from datetime import datetime
 from dotenv import load_dotenv
 from keepalive import keep_alive
 
-# ✅ 서버 유지
 keep_alive()
-
-# ✅ 환경변수 로드
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-# ✅ Intents 설정
 intents = discord.Intents.default()
 intents.message_content = True
 intents.reactions = True
 intents.members = True
 
-bot = commands.Bot(command_prefix='!', intents=intents)
-
-# ✅ 이모지 목록 및 상수 정의
 emoji_list = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 check_emoji = '✅'
 sell_emoji = '💰'
@@ -32,9 +25,6 @@ distribution_data = {}
 delete_delay = 10
 reaction_queue = []
 
-# ✅ 안전한 메시지 삭제 함수
-def enqueue(coro):
-    reaction_queue.append(coro)
 
 async def safe_delete(msg, delay=delete_delay):
     try:
@@ -44,6 +34,11 @@ async def safe_delete(msg, delay=delete_delay):
         print(f"[WARN] 메시지 삭제 실패: {e}")
     except Exception as e:
         print(f"[WARN] 삭제 중 알 수 없는 오류: {e}")
+
+
+def enqueue(coro):
+    reaction_queue.append(coro)
+
 
 async def reaction_worker():
     while True:
@@ -55,15 +50,19 @@ async def reaction_worker():
                 print(f"[ERROR] reaction 처리 중 오류: {e}")
         await asyncio.sleep(0.5)
 
-bot.loop.create_task(reaction_worker())
 
-@bot.event
-async def on_ready():
-    try:
-        synced = await bot.tree.sync()
-        print(f"✅ 슬래시 명령어 {len(synced)}개 동기화 완료!")
-    except Exception as e:
-        print(f"❌ 슬래시 명령어 동기화 실패: {e}")
+class MyBot(commands.Bot):
+    async def setup_hook(self):
+        self.loop.create_task(reaction_worker())
+        try:
+            synced = await self.tree.sync()
+            print(f"✅ 슬래시 명령어 {len(synced)}개 동기화 완료!")
+        except Exception as e:
+            print(f"❌ 슬래시 명령어 동기화 실패: {e}")
+
+
+bot = MyBot(command_prefix="!", intents=intents)
+
 
 @bot.command()
 async def 분배(ctx, *, arg):
@@ -74,6 +73,7 @@ async def 분배(ctx, *, arg):
         await create_distribution(ctx.channel, ctx.author, item, mention_list)
     except Exception as e:
         await safe_delete(await ctx.send(f"❌ 오류 발생: {e}"))
+
 
 @bot.command()
 async def 판매(ctx, message_id: int, *, content: str):
@@ -91,15 +91,18 @@ async def 판매(ctx, message_id: int, *, content: str):
     except Exception as e:
         await safe_delete(await ctx.send(f"❌ 오류: {e}"))
 
+
 @bot.command(name="ㅍ")
 async def 판매_축약(ctx, message_id: int, *, content: str):
     await safe_delete(ctx.message)
     await 판매(ctx, message_id, content=content)
 
+
 @bot.command()
 async def 분배중(ctx):
     await safe_delete(ctx.message)
     await send_distribution_list(ctx.author, ctx.guild, ctx.channel)
+
 
 @bot.tree.command(name="분배", description="아이템 분배 등록")
 @app_commands.describe(item="아이템 이름", 대상자="수령 대상자 멘션")
@@ -109,13 +112,14 @@ async def slash_분배(interaction: discord.Interaction, item: str, 대상자: s
     await create_distribution(interaction.channel, interaction.user, item, mention_list)
     await interaction.followup.send("✅ 분배 등록 완료!", ephemeral=True)
 
+
 @bot.tree.command(name="분배중", description="내가 수령자에 포함된 분배 목록을 DM으로 받아보세요")
 async def slash_분배중(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     await send_distribution_list(interaction.user, interaction.guild, interaction.channel)
     await interaction.followup.send("📬 DM으로 전송했어요!", ephemeral=True)
 
-# ✅ on_reaction_add 이벤트도 reaction_queue 활용
+
 @bot.event
 async def on_reaction_add(reaction, user):
     if user.bot:
@@ -124,6 +128,7 @@ async def on_reaction_add(reaction, user):
         await handle_reaction_event(reaction, user, is_add=True)
     enqueue(handle())
 
+
 @bot.event
 async def on_reaction_remove(reaction, user):
     if user.bot:
@@ -131,6 +136,7 @@ async def on_reaction_remove(reaction, user):
     async def handle():
         await handle_reaction_event(reaction, user, is_add=False)
     enqueue(handle())
+
 
 async def handle_reaction_event(reaction, user, is_add):
     msg_id = reaction.message.id
@@ -180,6 +186,7 @@ async def handle_reaction_event(reaction, user, is_add):
         creator = data["creator"].display_name
         for m in data["mentions"]:
             try:
+                await asyncio.sleep(1)  # ✅ Rate limit 방지
                 msg_link = f"https://discord.com/channels/{guild.id}/{message.channel.id}/{message.id}"
                 await m.send(f"👤 :{creator} 님의 분배 게시자에요.\n💰 `{data['item']}` 아이템이 판매 완료되었어요!\n🔗 [바로가기]({msg_link})")
             except discord.Forbidden:
@@ -189,6 +196,7 @@ async def handle_reaction_event(reaction, user, is_add):
         await safe_delete(await message.channel.send("✅ 강제 종료 처리가 완료되었습니다."))
         await 종료처리()
         del distribution_data[msg_id]
+
 
 async def create_distribution(channel, author, item, mention_list):
     lines = [f"{emoji_list[i]} {m.mention}" for i, m in enumerate(mention_list)]
@@ -212,12 +220,12 @@ async def create_distribution(channel, author, item, mention_list):
 
     for i in range(len(mention_list)):
         await msg.add_reaction(emoji_list[i])
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.7)  # ✅ 느리게 처리
 
     await msg.add_reaction(check_emoji)
-    await asyncio.sleep(0.3)
+    await asyncio.sleep(0.7)
     await msg.add_reaction(sell_emoji)
-    await asyncio.sleep(0.3)
+    await asyncio.sleep(0.7)
 
     distribution_data[msg.id] = {
         "creator": author,
@@ -229,6 +237,7 @@ async def create_distribution(channel, author, item, mention_list):
         "datetime": now,
         "price": "미입력"
     }
+
 
 async def send_distribution_list(user, guild, channel):
     found = []
@@ -249,5 +258,6 @@ async def send_distribution_list(user, guild, channel):
     else:
         await channel.send(f"🔍 {user.mention}님이 포함된 분배 항목이 없습니다.", delete_after=5)
 
-# ✅ 봇 실행
+
+# ✅ 실행
 bot.run(TOKEN)
